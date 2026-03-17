@@ -11,13 +11,15 @@ See [examples](https://github.com/QABEES/steply-examples).
 ## Quick Start
 Laptop or PC:
 - Step-1: Install Steply (In your laptop or PC)
-- Step-2: Clone the [examples](https://github.com/QABEES/steply-examples) repo
-- Step-3: Run a test or test suite using the **run** command and verify the **PASS/FAIL** result.
+- Step-2: Clone the [examples](https://github.com/QABEES/steply-examples) repo and then do `cd steply-examples`
+- Step-3: Run a test or test suite using the **run** command and verify the **PASS/FAIL** result at the concole.
+  - Also see `/target` for reports & logs
 
 CI CD:
 - Step-1: Push your test scenarios and envs to your Git repo. Ignore the `/target` (results) folder in `.gitignore`.
 - Step-2: Configure the CI workflow (see the **Install** section below).
-- Step-3: Trigger the workflow and check the Job console for **PASS/FAIL** status
+- Step-3: Trigger the workflow and check the Job console for **PASS/FAIL** status at the console
+  - Also see `/target` for reports & logs(or look for `Artifacts` after CI job completes)
 
 ## Install
 
