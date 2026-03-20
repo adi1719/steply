@@ -236,7 +236,11 @@ main() {
   verify_installation
 }
 
-# Guard: only run main when executed directly (not when sourced by tests)
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+# FIXED: run main when executed directly or piped via curl|bash.
+# Skip main when sourced by tests (BASH_SOURCE[0] is set but differs from $0).
+#   curl|bash → BASH_SOURCE[0] is unset/empty → run main
+#   ./script  → BASH_SOURCE[0] == $0           → run main
+#   source    → BASH_SOURCE[0] != $0           → skip main
+if [[ -z "${BASH_SOURCE[0]:-}" ]] || [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
   main "$@"
 fi
