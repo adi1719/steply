@@ -9,6 +9,11 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # Runs on every push and PR (Ubuntu + macOS).
+  # Validates install_no_jre.sh logic via fast, mocked unit tests — no network,
+  # no sudo, no real installs.
+  # ---------------------------------------------------------------------------
   test-install-script:
     name: Unit-test install_no_jre.sh
     strategy:
@@ -29,6 +34,10 @@ jobs:
       - name: Run install_no_jre tests
         run: bats scripts/tests/install_no_jre.bats
 
+  # ---------------------------------------------------------------------------
+  # Runs on every push and PR.
+  # Builds the Maven project and produces the no-JRE zip artifact.
+  # ---------------------------------------------------------------------------
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -80,6 +89,7 @@ jobs:
           path: ${{ steps.zip.outputs.artifact_dir }}/
           retention-days: 7
 
+      # -- TAG-ONLY: publish release zip to GitHub Releases ------------------
       - name: Create GitHub Release
         if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
@@ -87,6 +97,7 @@ jobs:
           name: ${{ github.ref_name }}
           files: ${{ steps.zip.outputs.path }}
 
+      # -- TAG-ONLY: bump VERSION in install scripts and raise a PR ----------
       - name: Update two install scripts with latest release tag
         if: github.ref_type == 'tag'
         run: |
@@ -112,3 +123,23 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  # TAG-ONLY: integration test — runs AFTER the release zip is published.
+  # Downloads and executes install_no_jre.sh on a fresh Ubuntu runner to verify
+  # the full end-to-end install flow: download → unzip → launcher → steply -v.
+  # Java is pre-installed on the runner (same scenario as a typical CI user).
+  # ---------------------------------------------------------------------------
+  integration-test-install:
+    name: Integration-test install_no_jre.sh (Ubuntu)
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run install_no_jre.sh
+        run: bash scripts/install_no_jre.sh
+
+      - name: Verify steply is executable and responds to -v
+        run: ~/.local/bin/steply -v
