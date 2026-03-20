@@ -23,12 +23,19 @@ Java17: (no-jre)
 
 <<Steps>>
 1. Update "VERSION.txt" to "202603DD.nn"
-2. Build with no-jre script (AUTO triggered by ci.yml workflow, but you can also run it manually)
+  => Wait for 2min for Action build to complete 
+2. [AUTO] Build with no-jre script (AUTO triggered by ci.yml workflow, but you can also run it manually)
 3. Create a new tag "202603DD.nn" and push it.
 4. Then it triggers the auto-upload release and 
   -> AUTO creates a PR to update "install_no_jre.sh" and "install.sh" file with the new tag.
 5. Then you can merge the PR : Handles and points to latest release in "install_no_jre.sh" a
+  -> Then run the Integration test job manually now to check the latest version is ok.
 6. For "install.sh" file. : Locally build and then upload the zip file to the release(edit and drop the file).
+
+For Automatic Release to "Releases" in GitHub:
+---------
+git tag 20260314.01
+git push origin 20260314.01
 
 ------
 Java8: (bundled)
@@ -40,10 +47,6 @@ Java8: (bundled)
 Optional:
 cp steply-cli/target/*-jar-with-dependencies.jar /private/tmp/steply-dist/lib/
 
-For Automatic Release to "Releases" in GitHub:
----------
-git tag 20260314.01
-git push origin 20260314.01
 
 PR: (Auto):
 Then a new build triggers and "- name: Create GitHub Release" pushes/uploads this zip file.
