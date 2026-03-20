@@ -19,7 +19,16 @@ Make sure to run with option "-DskipTests" prior to this line. Otherwise it crea
 Java17: (no-jre)
 ./scripts/build-distribution-no-jre.sh /tmp/steply-dist
 (update the VERSION.txt for a new version. )
-(Also after the build done, just update RELEASE_TAG and ZIP_NAME in "install_no_jre.sh" to point to the new release.)
+(Then after the build done, just update VERSION in "install_no_jre.sh" to point to the new release.)
+
+<<Steps>>
+1. Update "VERSION.txt" to "202603DD.nn"
+2. Build with no-jre script (AUTO triggered by ci.yml workflow, but you can also run it manually)
+3. Create a new tag "202603DD.nn" and push it.
+4. Then it triggers the auto-upload release and 
+  -> AUTO creates a PR to update "install_no_jre.sh" and "install.sh" file with the new tag.
+5. Then you can merge the PR : Handles and points to latest release in "install_no_jre.sh" a
+6. For "install.sh" file. : Locally build and then upload the zip file to the release(edit and drop the file).
 
 ------
 Java8: (bundled)
