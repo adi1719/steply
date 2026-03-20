@@ -138,8 +138,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run install_no_jre.sh
+      - name: Run install_no_jre.sh using bash
         run: bash scripts/install_no_jre.sh
+
+      - name: Run install_no_jre.sh via curl (mirrors real user experience)
+        run: curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install_no_jre.sh | bash
 
       - name: Verify steply is executable and responds to -v
         run: ~/.local/bin/steply -v
