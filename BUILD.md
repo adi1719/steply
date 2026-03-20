@@ -41,6 +41,49 @@ Then a new build triggers and "- name: Create GitHub Release" pushes/uploads thi
 "- name: Update install_no_jre.sh with latest release tag " will update the install_no_jre.sh.
 ```
 
+# RUN UNIT TESTS
+- Only tests the logic. 
+- It doesn't test the actual installation of Java or unzip
+
+```shell
+bats scripts/tests/install_no_jre.bats
+```
+output looks like:
+```shell
+➜  steply git:(main) ✗ bats scripts/tests/install_no_jre.bats
+install_no_jre.bats
+ ✓ detect_os: returns 'debian' when apt-get is available
+ ✓ detect_os: returns 'fedora' when dnf is available (no apt-get)
+ ✓ detect_os: returns 'amazon-linux' when yum present and os-release has 'Amazon Linux 2'
+ ✓ detect_os: returns 'fedora-yum' when yum present but not Amazon Linux
+ ✓ detect_os: returns 'macos-brew' on Darwin when brew is available
+ ✓ detect_os: returns 'macos-no-brew' on Darwin without brew
+ ✓ detect_os: returns 'unknown' when no package manager and not Darwin
+ ✓ get_java_major_version: returns 17 for OpenJDK 17
+ ✓ get_java_major_version: returns 21 for OpenJDK 21
+ ✓ get_java_major_version: returns 0 when java is not available
+ ✓ ensure_java: exits 0 and skips install when Java 17 is present
+ ✓ ensure_java: exits 0 and skips install when Java 21 is present
+ ✓ ensure_java: calls install_java_debian on debian when java absent
+ ✓ ensure_java: calls install_java_fedora on fedora when java absent
+ ✓ ensure_java: calls install_java_amazon on amazon-linux when java absent
+ ✓ ensure_java: calls install_java_brew on macos-brew when java absent
+ ✓ ensure_java: exits 1 on macos-no-brew when java absent (prints error)
+ ✓ ensure_java: exits 1 on unknown OS when java absent
+ ✓ ensure_unzip: exits 0 and skips install when unzip is present
+ ✓ ensure_unzip: calls install_unzip_debian on debian when unzip absent
+ ✓ ensure_unzip: calls install_unzip_fedora on fedora when unzip absent
+ ✓ ensure_unzip: calls install_unzip_yum on amazon-linux when unzip absent
+ ✓ ensure_unzip: calls install_unzip_brew on macos-brew when unzip absent
+ ✓ ensure_unzip: exits 1 on unknown OS when unzip absent
+ ✓ setup_path: appends BIN_DIR to .bashrc when not already in PATH
+ ✓ setup_path: appends BIN_DIR to .zshrc when not already in PATH
+ ✓ setup_path: does not modify .bashrc when BIN_DIR already in PATH
+ ✓ setup_path: does not append to .bashrc when BIN_DIR already listed in file
+
+28 tests, 0 failures
+```
+
 RUN:
 =====
 ➜  random pwd
