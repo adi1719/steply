@@ -54,8 +54,27 @@ Then a new build triggers and "- name: Create GitHub Release" pushes/uploads thi
 ```
 
 # RUN UNIT TESTS
-- Only tests the logic. 
-- It doesn't test the actual installation of Java or unzip
+- Shell unit tests use `bats-core`.
+- They only test pure script logic and mocked dispatch paths.
+- They do not install Java, install unzip, or hit the network.
+
+Run the shared local/CI entrypoint:
+
+```shell
+bash scripts/tests/run-shell-tests.sh
+```
+
+If `bats-core` is missing, install it first:
+
+```shell
+# macOS
+brew install bats-core
+
+# Ubuntu / Debian
+sudo apt-get install -y bats
+```
+
+Direct invocation also works:
 
 ```shell
 bats scripts/tests/install_no_jre.bats

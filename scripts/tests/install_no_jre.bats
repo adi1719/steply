@@ -18,12 +18,98 @@ teardown() {
   rm -rf "${FAKE_HOME:-}"
 }
 
+create_os_release_file() {
+  local contents="$1"
+  local file
+  file="$(mktemp)"
+  printf '%s\n' "${contents}" > "${file}"
+  echo "${file}"
+}
+
+# =============================================================================
+# helper functions
+# =============================================================================
+
+@test "is_macos: returns success on Darwin" {
+  _get_uname() { echo "Darwin"; }
+
+  run is_macos
+  [ "$status" -eq 0 ]
+}
+
+@test "is_macos: returns failure on Linux" {
+  _get_uname() { echo "Linux"; }
+
+  run is_macos
+  [ "$status" -eq 1 ]
+}
+
+@test "detect_linux_os: returns debian when apt-get is available" {
+  has_apt_get() { return 0; }
+  has_dnf()     { return 1; }
+  has_yum()     { return 1; }
+
+  run detect_linux_os
+  [ "$status" -eq 0 ]
+  [ "$output" = "debian" ]
+}
+
+@test "detect_linux_os: returns amazon-linux when yum is available and os-release matches" {
+  has_apt_get()     { return 1; }
+  has_dnf()         { return 1; }
+  has_yum()         { return 0; }
+  is_amazon_linux() { return 0; }
+
+  run detect_linux_os
+  [ "$status" -eq 0 ]
+  [ "$output" = "amazon-linux" ]
+}
+
+@test "detect_macos_os: returns macos-brew when brew is available" {
+  has_brew() { return 0; }
+
+  run detect_macos_os
+  [ "$status" -eq 0 ]
+  [ "$output" = "macos-brew" ]
+}
+
+@test "detect_macos_os: returns macos-no-brew when brew is not available" {
+  has_brew() { return 1; }
+
+  run detect_macos_os
+  [ "$status" -eq 0 ]
+  [ "$output" = "macos-no-brew" ]
+}
+
+@test "is_amazon_linux: returns success when os-release contains Amazon Linux 2" {
+  local fake_os_release
+  fake_os_release="$(create_os_release_file 'PRETTY_NAME="Amazon Linux 2"')"
+  OS_RELEASE_FILE="${fake_os_release}"
+
+  run is_amazon_linux
+  [ "$status" -eq 0 ]
+
+  rm -f "${fake_os_release}"
+}
+
+@test "is_amazon_linux: returns failure when os-release does not contain Amazon Linux 2" {
+  local fake_os_release
+  fake_os_release="$(create_os_release_file 'PRETTY_NAME="Ubuntu 24.04 LTS"')"
+  OS_RELEASE_FILE="${fake_os_release}"
+
+  run is_amazon_linux
+  [ "$status" -eq 1 ]
+
+  rm -f "${fake_os_release}"
+}
+
 # =============================================================================
 # detect_os
 # =============================================================================
 
 @test "detect_os: returns 'debian' when apt-get is available" {
   _has_command() { [[ "$1" == "apt-get" ]]; }
+  _get_uname()   { echo "Linux"; }
 
   run detect_os
   [ "$status" -eq 0 ]
@@ -32,6 +118,7 @@ teardown() {
 
 @test "detect_os: returns 'fedora' when dnf is available (no apt-get)" {
   _has_command() { [[ "$1" == "dnf" ]]; }
+  _get_uname()   { echo "Linux"; }
 
   run detect_os
   [ "$status" -eq 0 ]
@@ -40,10 +127,10 @@ teardown() {
 
 @test "detect_os: returns 'amazon-linux' when yum present and os-release has 'Amazon Linux 2'" {
   local fake_os_release
-  fake_os_release="$(mktemp)"
-  echo 'PRETTY_NAME="Amazon Linux 2"' > "${fake_os_release}"
+  fake_os_release="$(create_os_release_file 'PRETTY_NAME="Amazon Linux 2"')"
 
   _has_command() { [[ "$1" == "yum" ]]; }
+  _get_uname()   { echo "Linux"; }
   OS_RELEASE_FILE="${fake_os_release}"
 
   run detect_os
@@ -55,10 +142,10 @@ teardown() {
 
 @test "detect_os: returns 'fedora-yum' when yum present but not Amazon Linux" {
   local fake_os_release
-  fake_os_release="$(mktemp)"
-  echo 'PRETTY_NAME="CentOS Linux 7"' > "${fake_os_release}"
+  fake_os_release="$(create_os_release_file 'PRETTY_NAME="CentOS Linux 7"')"
 
   _has_command() { [[ "$1" == "yum" ]]; }
+  _get_uname()   { echo "Linux"; }
   OS_RELEASE_FILE="${fake_os_release}"
 
   run detect_os
@@ -126,6 +213,20 @@ teardown() {
 # =============================================================================
 # ensure_java
 # =============================================================================
+
+@test "install_java_for_os: dispatches to install_java_fedora_yum" {
+  install_java_fedora_yum() { echo "fedora_yum_install_called"; }
+
+  run install_java_for_os "fedora-yum"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"fedora_yum_install_called"* ]]
+}
+
+@test "install_java_for_os: exits 1 on unknown OS" {
+  run install_java_for_os "unknown"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"ERROR"* ]]
+}
 
 @test "ensure_java: exits 0 and skips install when Java 17 is present" {
   get_java_major_version() { echo "17"; }
@@ -207,6 +308,20 @@ teardown() {
 # ensure_unzip
 # =============================================================================
 
+@test "install_unzip_for_os: dispatches to install_unzip_yum for fedora-yum" {
+  install_unzip_yum() { echo "yum_unzip_called"; }
+
+  run install_unzip_for_os "fedora-yum"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"yum_unzip_called"* ]]
+}
+
+@test "install_unzip_for_os: exits 1 on unknown OS" {
+  run install_unzip_for_os "unknown"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"ERROR"* ]]
+}
+
 @test "ensure_unzip: exits 0 and skips install when unzip is present" {
   _has_command()        { [[ "$1" == "unzip" ]]; }
   install_unzip_debian() { echo "SHOULD_NOT_BE_CALLED"; }
@@ -268,6 +383,60 @@ teardown() {
 # =============================================================================
 # setup_path
 # =============================================================================
+
+@test "path_contains_bin_dir: returns success when BIN_DIR is already on PATH" {
+  BIN_DIR="/test/steply/bin"
+  local saved_path="$PATH"
+  PATH="/usr/bin:/test/steply/bin:/bin"
+
+  run path_contains_bin_dir
+  [ "$status" -eq 0 ]
+
+  PATH="$saved_path"
+}
+
+@test "path_contains_bin_dir: returns failure when BIN_DIR is missing from PATH" {
+  BIN_DIR="/test/steply/bin"
+  local saved_path="$PATH"
+  PATH="/usr/bin:/bin"
+
+  run path_contains_bin_dir
+  [ "$status" -eq 1 ]
+
+  PATH="$saved_path"
+}
+
+@test "shell_profiles: returns bashrc and zshrc under HOME" {
+  HOME="${FAKE_HOME}"
+
+  run shell_profiles
+  [ "$status" -eq 0 ]
+  [ "$output" = "${FAKE_HOME}/.bashrc
+${FAKE_HOME}/.zshrc" ]
+}
+
+@test "append_path_to_profile: appends export line when profile exists and path is not already listed" {
+  local profile="${FAKE_HOME}/.bashrc"
+  touch "${profile}"
+  BIN_DIR="/test/steply/bin"
+
+  run append_path_to_profile "${profile}" 'export PATH="/test/steply/bin:$PATH"'
+  [ "$status" -eq 0 ]
+  grep -q '# Added by Steply installer' "${profile}"
+  grep -q '/test/steply/bin' "${profile}"
+}
+
+@test "append_path_to_profile: does not modify profile when path is already listed" {
+  local profile="${FAKE_HOME}/.bashrc"
+  printf 'export PATH="/test/steply/bin:$PATH"\n' > "${profile}"
+  BIN_DIR="/test/steply/bin"
+  local initial_content
+  initial_content="$(cat "${profile}")"
+
+  run append_path_to_profile "${profile}" 'export PATH="/test/steply/bin:$PATH"'
+  [ "$status" -eq 0 ]
+  [ "$(cat "${profile}")" = "${initial_content}" ]
+}
 
 @test "setup_path: appends BIN_DIR to .bashrc when not already in PATH" {
   touch "${FAKE_HOME}/.bashrc"
