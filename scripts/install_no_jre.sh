@@ -321,26 +321,7 @@ setup_tmp_dir() {
   trap cleanup EXIT
 }
 
-ensure_curl() {
-  if _has_command curl; then
-    return 0
-  fi
-  echo "ERROR: 'curl' is required but not installed."
-  echo "Install it with:"
-  if is_macos; then
-    if has_brew; then
-      echo "  brew install curl"
-    else
-      echo "  Install Homebrew first (https://brew.sh), then run: brew install curl"
-    fi
-  else
-    echo "  apt-get update && apt-get install -y curl"
-  fi
-  exit 1
-}
-
 main() {
-  ensure_curl
   ensure_java
   ensure_unzip
 
