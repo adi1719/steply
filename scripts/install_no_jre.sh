@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Installs Steply without a bundled JRE.
-# Requires Java 17+ to be available on the PATH.
+# Requires Java 17 or higher to be available on the PATH.
 # Intended for CI environments (e.g. GitHub Actions or GitLab Pipeline).
 #
 # Usage:
@@ -105,7 +105,7 @@ install_java_amazon() {
 }
 install_java_brew() { brew install openjdk@17; }
 install_java_macos_no_brew() {
-  echo "ERROR: Java 17 not found and Homebrew is not installed."
+  echo "ERROR: Java 17 or higher not found and Homebrew is not installed."
   echo "Please install Java 17 (or higher) manually and re-run this script."
   echo ""
   echo "Option 1) Recommended: Install Homebrew first (https://brew.sh), then re-run this script."
@@ -125,7 +125,7 @@ install_java_for_os() {
     macos-brew)    install_java_brew ;;
     macos-no-brew) install_java_macos_no_brew ;;
     *)
-      echo "ERROR: Could not install Java 17 automatically. Please install Java 17+ manually and re-run."
+      echo "ERROR: Could not install Java 17 automatically. Please install Java 17 or higher manually and re-run."
       exit 1
       ;;
   esac
@@ -139,7 +139,7 @@ ensure_java() {
     return 0
   fi
 
-  echo "Java 17+ not found — attempting to install Java 17..."
+  echo "Java 17 or higher not found — attempting to install Java 17..."
   install_java_for_os "$(detect_os)"
 }
 
