@@ -258,7 +258,7 @@ append_path_to_profile() {
   local profile="$1"
   local export_line="$2"
 
-  if [[ -f "${profile}" ]] && ! grep -qF "${BIN_DIR}" "${profile}"; then
+  if ! grep -qF "${BIN_DIR}" "${profile}" 2>/dev/null; then
     echo "" >> "${profile}"
     echo "# Added by Steply installer" >> "${profile}"
     echo "${export_line}" >> "${profile}"
@@ -284,6 +284,10 @@ setup_path() {
   while IFS= read -r profile; do
     append_path_to_profile "${profile}" "${export_line}"
   done < <(shell_profiles)
+
+  # Export for the current session (no-op when run via curl|bash subshell,
+  # but takes effect when the script is sourced or run directly).
+  export PATH="${BIN_DIR}:${PATH}"
 
   print_path_note "${export_line}"
 }
