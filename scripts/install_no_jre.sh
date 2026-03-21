@@ -251,7 +251,7 @@ path_contains_bin_dir() {
 }
 
 shell_profiles() {
-  printf '%s\n' "${HOME}/.bashrc" "${HOME}/.zshrc"
+  printf '%s\n' "${HOME}/.profile" "${HOME}/.bashrc" "${HOME}/.zshrc"
 }
 
 append_path_to_profile() {
