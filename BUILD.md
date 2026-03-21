@@ -29,7 +29,10 @@ Java17: (no-jre)
 4. Then it triggers the auto-upload release and 
   -> AUTO creates a PR to update "install_no_jre.sh" and "install.sh" file with the new tag.
 5. Then you can merge the PR : Handles and points to latest release in "install_no_jre.sh" a
-  -> Then run the Integration test job manually now to check the latest version is ok.
+  -> Then run the Integration test job manually now to check the latest version is ok. //TODO TO BE DONE.
+  -> Integration test: currently runs for tag push only, so runs the earlier verion of the zip.
+  --> (as new PR is created after the tag push, hence the new verion is not available to the "install_no_jre" script). // FIX IT
+  --> WORKAROUND: Simply push a tag with bumping the version as " 20260320.03-SNAP", it will invoke the "install_no_jre.sh" with the new version.
 6. For "install.sh" file. : Locally build and then upload the zip file to the release(edit and drop the file).
 
 For Automatic Release to "Releases" in GitHub:
