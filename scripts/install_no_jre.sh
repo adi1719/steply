@@ -268,7 +268,9 @@ append_path_to_profile() {
 
 print_path_note() {
   echo
-  echo "NOTE: To use 'steply' in this session, run:"
+  echo "NOTE: '${BIN_DIR}' added to PATH for this session."
+  echo "To use 'steply' in a new terminal it will work automatically."
+  echo "To use it in this terminal right now, run:"
   echo "  $1"
   echo
 }
@@ -319,7 +321,26 @@ setup_tmp_dir() {
   trap cleanup EXIT
 }
 
+ensure_curl() {
+  if _has_command curl; then
+    return 0
+  fi
+  echo "ERROR: 'curl' is required but not installed."
+  echo "Install it with:"
+  if is_macos; then
+    if has_brew; then
+      echo "  brew install curl"
+    else
+      echo "  Install Homebrew first (https://brew.sh), then run: brew install curl"
+    fi
+  else
+    echo "  apt-get update && apt-get install -y curl"
+  fi
+  exit 1
+}
+
 main() {
+  ensure_curl
   ensure_java
   ensure_unzip
 
