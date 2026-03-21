@@ -29,6 +29,15 @@ _get_uname()           { uname; }
 _java_version_output() { java -version 2>&1; }
 _read_os_release()     { cat "${OS_RELEASE_FILE}"; }
 
+# Use sudo only when not already root (e.g. Docker containers run as root without sudo)
+_sudo() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    "$@"        # already root (e.g. Docker) — run directly
+  else
+    sudo "$@"   # not root — elevate with sudo
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # OS Detection
 # ---------------------------------------------------------------------------
@@ -87,12 +96,12 @@ get_java_major_version() {
   echo "${output}" | grep -oE '"[0-9]+' | head -1 | tr -d '"' || echo "0"
 }
 
-install_java_debian()     { sudo apt-get install -y openjdk-17-jre-headless; }
-install_java_fedora()     { sudo dnf install -y java-17-openjdk-headless; }
-install_java_fedora_yum() { sudo yum install -y java-17-openjdk-headless; }
+install_java_debian()     { _sudo apt-get install -y openjdk-17-jre-headless; }
+install_java_fedora()     { _sudo dnf install -y java-17-openjdk-headless; }
+install_java_fedora_yum() { _sudo yum install -y java-17-openjdk-headless; }
 install_java_amazon() {
-  sudo amazon-linux-extras enable corretto17 2>/dev/null || true
-  sudo yum install -y java-17-amazon-corretto-headless
+  _sudo amazon-linux-extras enable corretto17 2>/dev/null || true
+  _sudo yum install -y java-17-amazon-corretto-headless
 }
 install_java_brew() { brew install openjdk@17; }
 install_java_macos_no_brew() {
@@ -138,9 +147,9 @@ ensure_java() {
 # unzip
 # ---------------------------------------------------------------------------
 
-install_unzip_debian() { sudo apt-get install -y unzip; }
-install_unzip_fedora() { sudo dnf install -y unzip; }
-install_unzip_yum()    { sudo yum install -y unzip; }
+install_unzip_debian() { _sudo apt-get install -y unzip; }
+install_unzip_fedora() { _sudo dnf install -y unzip; }
+install_unzip_yum()    { _sudo yum install -y unzip; }
 install_unzip_brew()   { brew install unzip; }
 
 install_unzip_for_os() {
