@@ -268,8 +268,8 @@ append_path_to_profile() {
 
 print_path_note() {
   echo
-  echo "NOTE: '${BIN_DIR}' added to PATH for this session."
-  echo "To use 'steply' in a new terminal it will work automatically."
+  echo "NOTE: '${BIN_DIR}' has been added to your shell profile PATH settings."
+  echo "New terminals will pick this up automatically."
   echo "To use it in this terminal right now, run:"
   echo "  $1"
   echo
