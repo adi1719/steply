@@ -323,3 +323,20 @@ Duration: 0ms
 Reports generated at: ./target/reports/steply-report
 ========================================
 ```
+
+## Shell Unit Tests
+The installer shell logic is covered with `bats-core` tests and is runnable both locally and in GitHub Actions.
+
+Run:
+```shell
+bash scripts/tests/run-shell-tests.sh
+```
+
+Install `bats-core` first if needed:
+```shell
+# macOS
+brew install bats-core
+
+# Ubuntu / Debian
+sudo apt-get install -y bats
+```
