@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Installs Steply without a bundled JRE.
-# Requires Java 17+ to be available on the PATH.
+# Requires Java 17 or higher to be available on the PATH.
 # Intended for CI environments (e.g. GitHub Actions or GitLab Pipeline).
 #
 # Usage:
@@ -27,30 +27,60 @@ OS_RELEASE_FILE="${OS_RELEASE_FILE:-/etc/os-release}"
 _has_command()         { command -v "$1" &>/dev/null; }
 _get_uname()           { uname; }
 _java_version_output() { java -version 2>&1; }
+_read_os_release()     { cat "${OS_RELEASE_FILE}"; }
+
+# Use sudo only when not already root (e.g. Docker containers run as root without sudo)
+_sudo() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    "$@"        # already root (e.g. Docker) — run directly
+  else
+    sudo "$@"   # not root — elevate with sudo
+  fi
+}
 
 # ---------------------------------------------------------------------------
 # OS Detection
 # ---------------------------------------------------------------------------
 
-detect_os() {
-  if _has_command apt-get; then
+is_macos() { [[ "$(_get_uname)" == "Darwin" ]]; }
+has_apt_get() { _has_command apt-get; }
+has_dnf() { _has_command dnf; }
+has_yum() { _has_command yum; }
+has_brew() { _has_command brew; }
+
+is_amazon_linux() {
+  _read_os_release 2>/dev/null | grep -qi "Amazon Linux 2"
+}
+
+detect_linux_os() {
+  if has_apt_get; then
     echo "debian"
-  elif _has_command dnf; then
+  elif has_dnf; then
     echo "fedora"
-  elif _has_command yum; then
-    if grep -qi "Amazon Linux 2" "${OS_RELEASE_FILE}" 2>/dev/null; then
+  elif has_yum; then
+    if is_amazon_linux; then
       echo "amazon-linux"
     else
       echo "fedora-yum"
     fi
-  elif [[ "$(_get_uname)" == "Darwin" ]]; then
-    if _has_command brew; then
-      echo "macos-brew"
-    else
-      echo "macos-no-brew"
-    fi
   else
     echo "unknown"
+  fi
+}
+
+detect_macos_os() {
+  if has_brew; then
+    echo "macos-brew"
+  else
+    echo "macos-no-brew"
+  fi
+}
+
+detect_os() {
+  if is_macos; then
+    detect_macos_os
+  else
+    detect_linux_os
   fi
 }
 
@@ -66,16 +96,16 @@ get_java_major_version() {
   echo "${output}" | grep -oE '"[0-9]+' | head -1 | tr -d '"' || echo "0"
 }
 
-install_java_debian()     { sudo apt-get install -y openjdk-17-jre-headless; }
-install_java_fedora()     { sudo dnf install -y java-17-openjdk-headless; }
-install_java_fedora_yum() { sudo yum install -y java-17-openjdk-headless; }
+install_java_debian()     { _sudo apt-get install -y openjdk-17-jre-headless; }
+install_java_fedora()     { _sudo dnf install -y java-17-openjdk-headless; }
+install_java_fedora_yum() { _sudo yum install -y java-17-openjdk-headless; }
 install_java_amazon() {
-  sudo amazon-linux-extras enable corretto17 2>/dev/null || true
-  sudo yum install -y java-17-amazon-corretto-headless
+  _sudo amazon-linux-extras enable corretto17 2>/dev/null || true
+  _sudo yum install -y java-17-amazon-corretto-headless
 }
 install_java_brew() { brew install openjdk@17; }
 install_java_macos_no_brew() {
-  echo "ERROR: Java 17 not found and Homebrew is not installed."
+  echo "ERROR: Java 17 or higher not found and Homebrew is not installed."
   echo "Please install Java 17 (or higher) manually and re-run this script."
   echo ""
   echo "Option 1) Recommended: Install Homebrew first (https://brew.sh), then re-run this script."
@@ -85,16 +115,8 @@ install_java_macos_no_brew() {
   exit 1
 }
 
-ensure_java() {
-  local java_major
-  java_major="$(get_java_major_version)"
-  if [[ "${java_major}" -ge 17 ]]; then
-    echo "Found Java 17+ (version ${java_major}). Performing next steps..."
-    return 0
-  fi
-  echo "Java 17+ not found — attempting to install Java 17..."
-  local os
-  os="$(detect_os)"
+install_java_for_os() {
+  local os="$1"
   case "${os}" in
     debian)        install_java_debian ;;
     fedora)        install_java_fedora ;;
@@ -103,28 +125,35 @@ ensure_java() {
     macos-brew)    install_java_brew ;;
     macos-no-brew) install_java_macos_no_brew ;;
     *)
-      echo "ERROR: Could not install Java 17 automatically. Please install Java 17+ manually and re-run."
+      echo "ERROR: Could not install Java 17 automatically. Please install Java 17 or higher manually and re-run."
       exit 1
       ;;
   esac
+}
+
+ensure_java() {
+  local java_major
+  java_major="$(get_java_major_version)"
+  if [[ "${java_major}" -ge 17 ]]; then
+    echo "Found Java 17+ (version ${java_major}). Performing next steps..."
+    return 0
+  fi
+
+  echo "Java 17 or higher not found — attempting to install Java 17..."
+  install_java_for_os "$(detect_os)"
 }
 
 # ---------------------------------------------------------------------------
 # unzip
 # ---------------------------------------------------------------------------
 
-install_unzip_debian() { sudo apt-get install -y unzip; }
-install_unzip_fedora() { sudo dnf install -y unzip; }
-install_unzip_yum()    { sudo yum install -y unzip; }
+install_unzip_debian() { _sudo apt-get install -y unzip; }
+install_unzip_fedora() { _sudo dnf install -y unzip; }
+install_unzip_yum()    { _sudo yum install -y unzip; }
 install_unzip_brew()   { brew install unzip; }
 
-ensure_unzip() {
-  if _has_command unzip; then
-    return 0
-  fi
-  echo "'unzip' not found — attempting to install..."
-  local os
-  os="$(detect_os)"
+install_unzip_for_os() {
+  local os="$1"
   case "${os}" in
     debian)                  install_unzip_debian ;;
     fedora)                  install_unzip_fedora ;;
@@ -137,6 +166,15 @@ ensure_unzip() {
   esac
 }
 
+ensure_unzip() {
+  if _has_command unzip; then
+    return 0
+  fi
+
+  echo "'unzip' not found — attempting to install..."
+  install_unzip_for_os "$(detect_os)"
+}
+
 # ---------------------------------------------------------------------------
 # Download & Install
 # ---------------------------------------------------------------------------
@@ -146,31 +184,56 @@ download_zip() {
   curl -fsSL "${ZIP_URL}" -o "${TMP_DIR}/${ZIP_NAME}"
 }
 
-install_steply() {
-  echo "Installing to: ${INSTALL_DIR}"
+clear_install_dir() {
   rm -rf "${INSTALL_DIR:?}/"*
+}
+
+extract_distribution() {
   unzip -q "${TMP_DIR}/${ZIP_NAME}" -d "${INSTALL_DIR}"
+}
 
-  local steply_sh
-  steply_sh="$(find "${INSTALL_DIR}" -type f -path '*/bin/steply.sh' -print -quit || true)"
+find_steply_sh() {
+  find "${INSTALL_DIR}" -type f -path '*/bin/steply.sh' -print -quit || true
+}
 
-  if [[ -z "${steply_sh}" ]]; then
-    echo "ERROR: Could not find bin/steply.sh after unzip."
-    echo "Please check the zip layout: ${ZIP_URL}"
-    echo
-    echo "DEBUG: Top-level entries in ${INSTALL_DIR}:"
-    ls -la "${INSTALL_DIR}" || true
-    exit 1
-  fi
+resolve_dist_dir() {
+  local steply_sh="$1"
+  cd "$(dirname "${steply_sh}")/.." && pwd
+}
 
-  DIST_DIR="$(cd "$(dirname "${steply_sh}")/.." && pwd)"
-  chmod +x "${steply_sh}"
-
+create_launcher() {
+  local steply_sh="$1"
   cat > "${LAUNCHER}" <<LAUNCHER_EOF
 #!/usr/bin/env bash
 exec "${steply_sh}" "\$@"
 LAUNCHER_EOF
   chmod +x "${LAUNCHER}"
+}
+
+print_missing_steply_sh_error() {
+  echo "ERROR: Could not find bin/steply.sh after unzip."
+  echo "Please check the zip layout: ${ZIP_URL}"
+  echo
+  echo "DEBUG: Top-level entries in ${INSTALL_DIR}:"
+  ls -la "${INSTALL_DIR}" || true
+}
+
+install_steply() {
+  local steply_sh
+
+  echo "Installing to: ${INSTALL_DIR}"
+  clear_install_dir
+  extract_distribution
+
+  steply_sh="$(find_steply_sh)"
+  if [[ -z "${steply_sh}" ]]; then
+    print_missing_steply_sh_error
+    exit 1
+  fi
+
+  DIST_DIR="$(resolve_dist_dir "${steply_sh}")"
+  chmod +x "${steply_sh}"
+  create_launcher "${steply_sh}"
 
   echo
   echo "Installed Steply (no-JRE) ${VERSION}."
@@ -183,24 +246,53 @@ LAUNCHER_EOF
 # PATH setup
 # ---------------------------------------------------------------------------
 
-setup_path() {
-  if echo ":${PATH}:" | grep -q ":${BIN_DIR}:"; then
-    return 0
+path_contains_bin_dir() {
+  # Used fixed-string matching with "grep -qF"
+  echo ":${PATH}:" | grep -qF ":${BIN_DIR}:"
+}
+
+shell_profiles() {
+  printf '%s\n' "${HOME}/.profile" "${HOME}/.bashrc" "${HOME}/.zshrc"
+}
+
+append_path_to_profile() {
+  local profile="$1"
+  local export_line="$2"
+
+  if [[ -f "${profile}" ]] && ! grep -qF "${BIN_DIR}" "${profile}"; then
+    echo "" >> "${profile}"
+    echo "# Added by Steply installer" >> "${profile}"
+    echo "${export_line}" >> "${profile}"
+    echo "Added ${BIN_DIR} to PATH in ${profile}."
   fi
+}
+
+print_path_note() {
+  echo
+  echo "NOTE: '${BIN_DIR}' has been added to your shell profile PATH settings."
+  echo "New terminals will pick this up automatically."
+  echo "To use it in this terminal right now, run:"
+  echo "  $1"
+  echo
+}
+
+setup_path() {
   local export_line="export PATH=\"${BIN_DIR}:\$PATH\""
   local profile
-  for profile in "${HOME}/.bashrc" "${HOME}/.zshrc"; do
-    if [[ -f "${profile}" ]] && ! grep -qF "${BIN_DIR}" "${profile}"; then
-      echo "" >> "${profile}"
-      echo "# Added by Steply installer" >> "${profile}"
-      echo "${export_line}" >> "${profile}"
-      echo "Added ${BIN_DIR} to PATH in ${profile}."
-    fi
-  done
-  echo
-  echo "NOTE: To use 'steply' in this session, run:"
-  echo "  ${export_line}"
-  echo
+
+  if path_contains_bin_dir; then
+    return 0
+  fi
+
+  while IFS= read -r profile; do
+    append_path_to_profile "${profile}" "${export_line}"
+  done < <(shell_profiles)
+
+  # Export for the current session (no-op when run via curl|bash subshell,
+  # but takes effect when the script is sourced or run directly).
+  export PATH="${BIN_DIR}:${PATH}"
+
+  print_path_note "${export_line}"
 }
 
 # ---------------------------------------------------------------------------
@@ -220,15 +312,22 @@ verify_installation() {
 # Main
 # ---------------------------------------------------------------------------
 
+prepare_install_dirs() {
+  mkdir -p "${INSTALL_DIR}" "${BIN_DIR}"
+}
+
+setup_tmp_dir() {
+  TMP_DIR="$(mktemp -d)"
+  cleanup() { rm -rf "${TMP_DIR}"; }
+  trap cleanup EXIT
+}
+
 main() {
   ensure_java
   ensure_unzip
 
-  mkdir -p "${INSTALL_DIR}" "${BIN_DIR}"
-
-  TMP_DIR="$(mktemp -d)"
-  cleanup() { rm -rf "${TMP_DIR}"; }
-  trap cleanup EXIT
+  prepare_install_dirs
+  setup_tmp_dir
 
   download_zip
   install_steply

@@ -183,6 +183,23 @@ curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/uninstal
 
 This removes the `steply` launcher, all installed files, and the PATH entry from your shell profile.
 
+## Shell Unit Tests
+The installer shell logic is covered with `bats-core` tests and is runnable both locally and in GitHub Actions.
+
+Run:
+```shell
+bash scripts/tests/run-shell-tests.sh
+```
+
+Install `bats-core` first if needed:
+```shell
+# macOS
+brew install bats-core
+
+# Ubuntu / Debian
+sudo apt-get install -y bats
+```
+
 ## Documentation
 For detailed documentation and examples, visit [here](https://zerocode-tdd.tddfy.com/)
 
