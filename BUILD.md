@@ -19,7 +19,7 @@ Make sure to run with option "-DskipTests" prior to this line. Otherwise it crea
 Java17: (no-jre)
 ./scripts/build-distribution-no-jre.sh /tmp/steply-dist
 (update the VERSION.txt for a new version. )
-(Then after the build done, just update VERSION in "install_no_jre.sh" to point to the new release.)
+(Then after the build done, just update VERSION in "install.sh" to point to the new release.)
 
 <<Steps>>
 1. Update "VERSION.txt" to "202603DD.nn"
@@ -27,13 +27,13 @@ Java17: (no-jre)
 2. [AUTO] Build with no-jre script (AUTO triggered by ci.yml workflow, but you can also run it manually)
 3. Create a new tag "202603DD.nn" and push it.
 4. Then it triggers the auto-upload release and 
-  -> AUTO creates a PR to update "install_no_jre.sh" and "install.sh" file with the new tag.
-5. Then you can merge the PR : Handles and points to latest release in "install_no_jre.sh" a
+  -> AUTO creates a PR to update "install.sh" and "install_mac_arm.sh" file with the new tag.
+5. Then you can merge the PR : Handles and points to latest release in "install.sh"
   -> Then run the Integration test job manually now to check the latest version is ok. //TODO TO BE DONE.
   -> Integration test: currently runs for tag push only, so runs the earlier verion of the zip.
-  --> (as new PR is created after the tag push, hence the new verion is not available to the "install_no_jre" script). // FIX IT
-  --> WORKAROUND: Simply push a tag with bumping the version as " 20260320.03-SNAP", it will invoke the "install_no_jre.sh" with the new version.
-6. For "install.sh" file. : Locally build and then upload the zip file to the release(edit and drop the file).
+  --> (as new PR is created after the tag push, hence the new verion is not available to the "install" script). // FIX IT
+  --> WORKAROUND: Simply push a tag with bumping the version as " 20260320.03-SNAP", it will invoke the "install.sh" with the new version.
+6. For "install_mac_arm.sh" file. : Locally build and then upload the zip file to the release(edit and drop the file).
 
 For Automatic Release to "Releases" in GitHub:
 ---------
@@ -53,7 +53,7 @@ cp steply-cli/target/*-jar-with-dependencies.jar /private/tmp/steply-dist/lib/
 
 PR: (Auto):
 Then a new build triggers and "- name: Create GitHub Release" pushes/uploads this zip file.
-"- name: Update install_no_jre.sh with latest release tag " will update the install_no_jre.sh.
+"- name: Update two install scripts with latest release tag" will update install.sh and install_mac_arm.sh.
 ```
 
 # RUN UNIT TESTS
@@ -80,12 +80,12 @@ sudo apt-get install -y bats
 Direct invocation also works:
 
 ```shell
-bats scripts/tests/install_no_jre.bats
+bats scripts/tests/install.bats
 ```
 output looks like:
 ```shell
-➜  steply git:(main) ✗ bats scripts/tests/install_no_jre.bats
-install_no_jre.bats
+➜  steply git:(main) ✗ bats scripts/tests/install.bats
+install.bats
  ✓ detect_os: returns 'debian' when apt-get is available
  ✓ detect_os: returns 'fedora' when dnf is available (no apt-get)
  ✓ detect_os: returns 'amazon-linux' when yum present and os-release has 'Amazon Linux 2'
