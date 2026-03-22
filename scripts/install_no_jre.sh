@@ -258,7 +258,7 @@ append_path_to_profile() {
   local profile="$1"
   local export_line="$2"
 
-  if ! grep -qF "${BIN_DIR}" "${profile}" 2>/dev/null; then
+  if [[ -f "${profile}" ]] && ! grep -qF "${BIN_DIR}" "${profile}"; then
     echo "" >> "${profile}"
     echo "# Added by Steply installer" >> "${profile}"
     echo "${export_line}" >> "${profile}"
