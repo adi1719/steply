@@ -247,7 +247,8 @@ install_steply() {
 # ---------------------------------------------------------------------------
 
 path_contains_bin_dir() {
-  echo ":${PATH}:" | grep -q ":${BIN_DIR}:"
+  # Used fixed-string matching with "grep -qF"
+  echo ":${PATH}:" | grep -qF ":${BIN_DIR}:"
 }
 
 shell_profiles() {
