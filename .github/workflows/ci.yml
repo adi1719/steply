@@ -11,11 +11,11 @@ on:
 jobs:
   # ---------------------------------------------------------------------------
   # Runs on every push and PR (Ubuntu + macOS).
-  # Validates install_no_jre.sh logic via fast, mocked unit tests — no network,
+  # Validates install.sh logic via fast, mocked unit tests — no network,
   # no sudo, no real installs.
   # ---------------------------------------------------------------------------
   test-install-script:
-    name: Unit-test install_no_jre.sh
+    name: Unit-test install.sh
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -31,7 +31,7 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install bats-core
 
-      - name: Run install_no_jre tests
+      - name: Run install tests
         run: bash scripts/tests/run-shell-tests.sh
 
   # ---------------------------------------------------------------------------
@@ -107,9 +107,9 @@ jobs:
           BRANCH="chore/update-install-script-${TAG}"
           git fetch origin main
           git checkout -B "${BRANCH}" origin/main
-          sed -i "s|^VERSION=.*|VERSION=\"${TAG}\" #This is the only variable to update when releasing a new version.|" scripts/install_no_jre.sh
+          sed -i "s|^VERSION=.*|VERSION=\"${TAG}\" #This is the only variable to update when releasing a new version.|" scripts/install_mac_arm.sh
           sed -i "s|^VERSION=.*|VERSION=\"${TAG}\" #This is the only variable to update when releasing a new version.|" scripts/install.sh
-          git add scripts/install_no_jre.sh scripts/install.sh
+          git add scripts/install_mac_arm.sh scripts/install.sh
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
@@ -117,7 +117,7 @@ jobs:
             git push origin "${BRANCH}"
             gh pr create \
               --title "chore: update two install scripts for release ${TAG}" \
-              --body "Automated PR to update \`VERSION\` in \`scripts/install.sh\` and \`scripts/install_no_jre.sh\` following release \`${TAG}\`." \
+              --body "Automated PR to update \`VERSION\` in \`scripts/install.sh\` and \`scripts/install_mac_arm.sh\` following release \`${TAG}\`." \
               --base main \
               --head "${BRANCH}"
           fi
@@ -126,23 +126,23 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # TAG-ONLY: integration test — runs AFTER the release zip is published.
-  # Downloads and executes install_no_jre.sh on a fresh Ubuntu runner to verify
+  # Downloads and executes install.sh on a fresh Ubuntu runner to verify
   # the full end-to-end install flow: download → unzip → launcher → steply -v.
   # Java is pre-installed on the runner (same scenario as a typical CI user).
   # ---------------------------------------------------------------------------
   integration-test-install:
-    name: Integration-test install_no_jre.sh (Ubuntu)
+    name: Integration-test install.sh (Ubuntu)
     needs: build
     if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run install_no_jre.sh using bash
-        run: bash scripts/install_no_jre.sh
+      - name: Run install.sh using bash
+        run: bash scripts/install.sh
 
-      - name: Run install_no_jre.sh via curl (mirrors real user experience)
-        run: curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install_no_jre.sh | bash
+      - name: Run install.sh via curl (mirrors real user experience)
+        run: curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install.sh | bash
 
       - name: Verify steply -v works - mimics Ubuntu in Docker(without symlink)
         run: ~/.local/bin/steply -v

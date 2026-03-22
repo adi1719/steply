@@ -1,15 +1,15 @@
 #!/usr/bin/env bats
-# Unit tests for scripts/install_no_jre.sh
+# Unit tests for scripts/install.sh
 #
-# Run locally:  bats scripts/tests/install_no_jre.bats
+# Run locally:  bats scripts/tests/install.bats
 # Run in CI:    see .github/workflows/ci.yml  (test-install-script job)
 
 SCRIPT_DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
 
 setup() {
   # Source the script — main() is guarded by BASH_SOURCE and will NOT run
-  # shellcheck source=../install_no_jre.sh
-  source "${SCRIPT_DIR}/install_no_jre.sh"
+  # shellcheck source=../install.sh
+  source "${SCRIPT_DIR}/install.sh"
 
   FAKE_HOME="$(mktemp -d)"
 }

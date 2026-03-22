@@ -25,7 +25,7 @@ CI CD:
 
 ### Mac Arm / Mac Intel / Linux / Ubuntu / VPS / CI CD Workflow
 ```shell
-curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install_no_jre.sh | bash
+curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install.sh | bash
 ```
 
 <details>
@@ -47,7 +47,7 @@ _(This is a GitHub Actions step. A similar step can go into a GitLab CI/CD Pipel
 
 - name: Install Steply
   run: |
-    curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install_no_jre.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install.sh | bash
     echo "$HOME/.local/bin" >> $GITHUB_PATH
 ```
 
@@ -56,7 +56,7 @@ _(This is a GitHub Actions step. A similar step can go into a GitLab CI/CD Pipel
 ### For Mac M3/ARM Only (Java bundled)
 No Java required — JRE is included in the distribution.
 ```shell
-curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install_mac_arm.sh | bash
 ```
 
 ## Run a test

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-TEST_FILE="${REPO_ROOT}/scripts/tests/install_no_jre.bats"
+TEST_FILE="${REPO_ROOT}/scripts/tests/install.bats"
 
 if command -v bats >/dev/null 2>&1; then
   BATS_CMD="bats"
