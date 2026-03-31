@@ -53,7 +53,7 @@ _(This is a GitHub Actions step. A similar step can go into a GitLab CI/CD Pipel
 
 </details>
 
-### For Mac M3/ARM Only (Java bundled)
+### Alternatively For Mac M1-M5 (Java pre-bundled)
 No Java required — JRE is included in the distribution.
 ```shell
 curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install_mac_arm.sh | bash
