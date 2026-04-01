@@ -61,7 +61,7 @@ curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install_
 
 ## Run a test
 ```shell
-steply --scenario tests/validate_github_user.json --target-env env/sit.properties
+steply --scenario tests/get_user_api.json --target-env env/sit1.properties
 ```
 
 ## Run a full test suite
