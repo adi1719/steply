@@ -1,3 +1,3 @@
-steply.version=20260424.01
+steply.version=20260425.01
 build.date=PLACEHOLDER
 build.note=VERSION.txt file is auto updated by the CI job upon a release tag push, do not edit it manually.
