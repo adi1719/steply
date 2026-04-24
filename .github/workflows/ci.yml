@@ -126,29 +126,52 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # TAG-ONLY: integration test — runs AFTER the release zip is published.
-  # Downloads and executes install.sh on a fresh Ubuntu runner to verify
-  # the full end-to-end install flow: download → unzip → launcher → steply -v.
-  # Java is pre-installed on the runner (same scenario as a typical CI user).
+  # Patches VERSION in the checked-out install.sh to match the pushed tag so
+  # it downloads the zip that was JUST uploaded, not the previous release.
+  # (At tag-push time the PR to update install.sh has not been merged yet.)
   # ---------------------------------------------------------------------------
   integration-test-install:
-    name: Integration-test install.sh (Ubuntu)
+    name: Integration-test install.sh (Ubuntu, tag version)
     needs: build
     if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run install.sh using bash
+      - name: Patch install.sh VERSION to current tag
+        if: github.ref_type == 'tag'
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          sed -i "s|^VERSION=.*|VERSION=\"${TAG}\" #This is the only variable to update when releasing a new version.|" scripts/install.sh
+
+      - name: Run install.sh using bash (new release zip)
         run: bash scripts/install.sh
 
-      - name: Run install.sh via curl (mirrors real user experience)
-        run: curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install.sh | bash
-
-      - name: Verify steply -v works - mimics Ubuntu in Docker(without symlink)
+      - name: Verify steply -v works - mimics Ubuntu in Docker (without symlink)
         run: ~/.local/bin/steply -v
 
-      - name: Add steply to PATH for subsequent steps(tries to setup like aws VPS)
+      - name: Add steply to PATH for subsequent steps (tries to setup like aws VPS)
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Verify steply -v works - mimics real aws VPS(with symlink)
+      - name: Verify steply -v works - mimics real aws VPS (with symlink)
         run: steply -v
+
+  # ---------------------------------------------------------------------------
+  # MAIN-ONLY: curl integration test — runs after the release PR is merged.
+  # At that point main/scripts/install.sh points to the new VERSION, so the
+  # curl mirrors exactly what a real user gets from the install one-liner.
+  # Triggered only when the release-update commit lands on main.
+  # ---------------------------------------------------------------------------
+  integration-test-curl:
+    name: Integration-test install.sh via curl (post-merge)
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      contains(github.event.head_commit.message, 'update install scripts for release')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run install.sh via curl (mirrors real user one-liner)
+        run: curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install.sh | bash
+
+      - name: Verify steply -v works
+        run: ~/.local/bin/steply -v
