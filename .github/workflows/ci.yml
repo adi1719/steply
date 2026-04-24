@@ -167,7 +167,7 @@ jobs:
     if: |
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
-      contains(github.event.head_commit.message, 'update install scripts for release')
+      contains(github.event.head_commit.message, 'update-install-script-')
     runs-on: ubuntu-latest
     steps:
       - name: Run install.sh via curl (mirrors real user one-liner)
