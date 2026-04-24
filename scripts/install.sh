@@ -24,10 +24,12 @@ OS_RELEASE_FILE="${OS_RELEASE_FILE:-/etc/os-release}"
 # Testable helpers — override these in unit tests to avoid real system calls
 # ---------------------------------------------------------------------------
 
-_has_command()         { command -v "$1" &>/dev/null; }
-_get_uname()           { uname; }
-_java_version_output() { java -version 2>&1; }
-_read_os_release()     { cat "${OS_RELEASE_FILE}"; }
+_has_command()             { command -v "$1" &>/dev/null; }
+_get_uname()               { uname; }
+_java_version_output()     { java -version 2>&1; }
+_read_os_release()         { cat "${OS_RELEASE_FILE}"; }
+_brew_prefix_openjdk17()   { brew --prefix openjdk@17 2>/dev/null; }
+_brew_list_openjdk17()     { brew list openjdk@17 &>/dev/null 2>&1; }
 
 # Use sudo only when not already root (e.g. Docker containers run as root without sudo)
 _sudo() {
@@ -96,6 +98,35 @@ get_java_major_version() {
   echo "${output}" | grep -oE '"[0-9]+' | head -1 | tr -d '"' || echo "0"
 }
 
+# Homebrew installs openjdk@17 as keg-only — it is NOT linked into PATH by default.
+# `brew --prefix openjdk@17` returns the stable opt-symlink path regardless of arch:
+#   ARM Mac (M1/M2/M3/M5): /opt/homebrew/opt/openjdk@17
+#   Intel Mac:              /usr/local/opt/openjdk@17
+# We use that path to export JAVA_HOME and prepend to PATH for the current session,
+# then persist both exports to the user's shell profiles so future terminals work.
+configure_brew_java() {
+  local brew_prefix
+  brew_prefix="$(_brew_prefix_openjdk17)" || return 1
+  [[ -x "${brew_prefix}/bin/java" ]] || return 1
+
+  export JAVA_HOME="${brew_prefix}"
+  export PATH="${brew_prefix}/bin:${PATH}"
+
+  local java_home_export="export JAVA_HOME=\"${brew_prefix}\""
+  local java_path_export="export PATH=\"${brew_prefix}/bin:\$PATH\""
+  local profile
+  while IFS= read -r profile; do
+    if [[ -f "${profile}" ]] && ! grep -qF "openjdk@17" "${profile}"; then
+      {
+        echo ""
+        echo "# Added by Steply installer (Java 17)"
+        echo "${java_home_export}"
+        echo "${java_path_export}"
+      } >> "${profile}"
+    fi
+  done < <(shell_profiles)
+}
+
 install_java_debian()     { _sudo apt-get install -y openjdk-17-jre-headless; }
 install_java_fedora()     { _sudo dnf install -y java-17-openjdk-headless; }
 install_java_fedora_yum() { _sudo yum install -y java-17-openjdk-headless; }
@@ -103,7 +134,12 @@ install_java_amazon() {
   _sudo amazon-linux-extras enable corretto17 2>/dev/null || true
   _sudo yum install -y java-17-amazon-corretto-headless
 }
-install_java_brew() { brew install openjdk@17; }
+install_java_brew() {
+  brew install openjdk@17
+  # brew's openjdk@17 is keg-only so it is never on PATH automatically.
+  # Configure JAVA_HOME + PATH right now so the rest of the script can use java.
+  configure_brew_java || true
+}
 install_java_macos_no_brew() {
   echo "ERROR: Java 17 or higher not found and Homebrew is not installed."
   echo "Please install Java 17 (or higher) manually and re-run this script."
@@ -137,6 +173,19 @@ ensure_java() {
   if [[ "${java_major}" -ge 17 ]]; then
     echo "Found Java 17+ (version ${java_major}). Performing next steps..."
     return 0
+  fi
+
+  # On macOS with Homebrew, openjdk@17 may already be installed as keg-only
+  # but not on PATH (common after a previous install attempt, or if the user
+  # added it via brew manually). Detect and configure it before re-installing.
+  if is_macos && has_brew && _brew_list_openjdk17; then
+    echo "Found Homebrew openjdk@17 (keg-only) — configuring JAVA_HOME and PATH..."
+    configure_brew_java || true
+    java_major="$(get_java_major_version)"
+    if [[ "${java_major}" -ge 17 ]]; then
+      echo "Java ${java_major} configured successfully."
+      return 0
+    fi
   fi
 
   echo "Java 17 or higher not found — attempting to install Java 17..."
