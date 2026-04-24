@@ -69,7 +69,12 @@ This single command triggers the following CI jobs automatically:
 You can watch all of this at:
 `https://github.com/QABEES/steply/actions`
 
+- Before auto-PR merge(after release tag push):
 <img width="800" height="480" alt="image" src="https://github.com/user-attachments/assets/cc90ba55-90f8-400f-8fbd-e02e158ac650" />
+
+
+- After auto-PR merge(after release tag push):
+<img width="800" height="480" alt="image" src="https://github.com/user-attachments/assets/739a6aa1-3587-4d21-8bec-911789040abd" />
 
 ---
 
