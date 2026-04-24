@@ -56,6 +56,15 @@ jobs:
           java-version: '17'
           cache: maven
 
+      # On a tag push, rewrite VERSION.txt to match the tag before Maven runs.
+      # This ensures the file bundled inside the zip is correct, so `steply -v`
+      # always reports the right version. Non-tag builds leave VERSION.txt as-is.
+      - name: Sync VERSION.txt to tag
+        if: github.ref_type == 'tag'
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          sed -i "s|^steply.version=.*|steply.version=${TAG}|" VERSION.txt
+
       - name: Build
         run: mvn clean install -DskipTests
 
@@ -97,8 +106,8 @@ jobs:
           name: ${{ github.ref_name }}
           files: ${{ steps.zip.outputs.path }}
 
-      # -- TAG-ONLY: bump VERSION in install scripts and raise a PR ----------
-      - name: Update two install scripts with latest release tag
+      # -- TAG-ONLY: bump VERSION in install scripts + VERSION.txt and raise a PR
+      - name: Update install scripts and VERSION.txt with latest release tag
         if: github.ref_type == 'tag'
         run: |
           TAG="${GITHUB_REF_NAME}"
@@ -109,7 +118,8 @@ jobs:
           git checkout -B "${BRANCH}" origin/main
           sed -i "s|^VERSION=.*|VERSION=\"${TAG}\" #This is the only variable to update when releasing a new version.|" scripts/install_mac_arm.sh
           sed -i "s|^VERSION=.*|VERSION=\"${TAG}\" #This is the only variable to update when releasing a new version.|" scripts/install.sh
-          git add scripts/install_mac_arm.sh scripts/install.sh
+          sed -i "s|^steply.version=.*|steply.version=${TAG}|" VERSION.txt
+          git add scripts/install_mac_arm.sh scripts/install.sh VERSION.txt
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
@@ -117,7 +127,7 @@ jobs:
             git push origin "${BRANCH}"
             gh pr create \
               --title "chore: update two install scripts for release ${TAG}" \
-              --body "Automated PR to update \`VERSION\` in \`scripts/install.sh\` and \`scripts/install_mac_arm.sh\` following release \`${TAG}\`." \
+              --body "Automated PR to update \`VERSION\` in \`scripts/install.sh\`, \`scripts/install_mac_arm.sh\`, and \`VERSION.txt\` following release \`${TAG}\`." \
               --base main \
               --head "${BRANCH}"
           fi
