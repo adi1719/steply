@@ -304,6 +304,107 @@ create_os_release_file() {
   [[ "$output" == *"ERROR"* ]]
 }
 
+@test "ensure_java: configures keg-only brew java without reinstalling when already present" {
+  _get_uname()             { echo "Darwin"; }
+  _has_command()           { [[ "$1" == "brew" ]]; }
+  _brew_list_openjdk17()   { return 0; }
+  configure_brew_java()    { export JAVA_HOME="/fake/jdk"; echo "configure_called"; }
+  get_java_major_version() { [[ "${JAVA_HOME:-}" == "/fake/jdk" ]] && echo "17" || echo "0"; }
+  install_java_brew()      { echo "SHOULD_NOT_BE_CALLED"; }
+
+  run ensure_java
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"configure_called"* ]]
+  [[ "$output" != *"SHOULD_NOT_BE_CALLED"* ]]
+}
+
+@test "ensure_java: falls through to brew install when keg-only configure does not yield java 17" {
+  _get_uname()             { echo "Darwin"; }
+  _has_command()           { [[ "$1" == "brew" ]]; }
+  _brew_list_openjdk17()   { return 0; }
+  configure_brew_java()    { return 0; }
+  get_java_major_version() { echo "0"; }
+  detect_os()              { echo "macos-brew"; }
+  install_java_brew()      { echo "brew_install_called"; }
+
+  run ensure_java
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"brew_install_called"* ]]
+}
+
+# =============================================================================
+# configure_brew_java
+# =============================================================================
+
+@test "configure_brew_java: exports JAVA_HOME and PATH when brew prefix has a java binary" {
+  local fake_prefix
+  fake_prefix="$(mktemp -d)"
+  mkdir -p "${fake_prefix}/bin"
+  touch "${fake_prefix}/bin/java" && chmod +x "${fake_prefix}/bin/java"
+  _brew_prefix_openjdk17() { echo "${fake_prefix}"; }
+  HOME="${FAKE_HOME}"
+
+  configure_brew_java
+
+  [ "${JAVA_HOME}" = "${fake_prefix}" ]
+  [[ ":${PATH}:" == *":${fake_prefix}/bin:"* ]]
+
+  rm -rf "${fake_prefix}"
+}
+
+@test "configure_brew_java: appends JAVA_HOME and PATH exports to shell profile" {
+  local fake_prefix
+  fake_prefix="$(mktemp -d)"
+  mkdir -p "${fake_prefix}/bin"
+  touch "${fake_prefix}/bin/java" && chmod +x "${fake_prefix}/bin/java"
+  _brew_prefix_openjdk17() { echo "${fake_prefix}"; }
+  HOME="${FAKE_HOME}"
+  touch "${FAKE_HOME}/.zshrc"
+
+  configure_brew_java
+
+  grep -q "JAVA_HOME" "${FAKE_HOME}/.zshrc"
+  grep -q "${fake_prefix}/bin" "${FAKE_HOME}/.zshrc"
+
+  rm -rf "${fake_prefix}"
+}
+
+@test "configure_brew_java: does not append to profile when openjdk@17 already listed" {
+  local fake_prefix
+  fake_prefix="$(mktemp -d)"
+  mkdir -p "${fake_prefix}/bin"
+  touch "${fake_prefix}/bin/java" && chmod +x "${fake_prefix}/bin/java"
+  _brew_prefix_openjdk17() { echo "${fake_prefix}"; }
+  HOME="${FAKE_HOME}"
+  echo "export PATH=\"${fake_prefix}/bin:\$PATH\" # openjdk@17" > "${FAKE_HOME}/.zshrc"
+  local initial_content
+  initial_content="$(cat "${FAKE_HOME}/.zshrc")"
+
+  configure_brew_java
+
+  [ "$(cat "${FAKE_HOME}/.zshrc")" = "${initial_content}" ]
+
+  rm -rf "${fake_prefix}"
+}
+
+@test "configure_brew_java: returns 1 when brew --prefix fails" {
+  _brew_prefix_openjdk17() { return 1; }
+
+  run configure_brew_java
+  [ "$status" -eq 1 ]
+}
+
+@test "configure_brew_java: returns 1 when java binary is missing from brew prefix" {
+  local fake_prefix
+  fake_prefix="$(mktemp -d)"
+  _brew_prefix_openjdk17() { echo "${fake_prefix}"; }
+
+  run configure_brew_java
+  [ "$status" -eq 1 ]
+
+  rm -rf "${fake_prefix}"
+}
+
 # =============================================================================
 # ensure_unzip
 # =============================================================================
