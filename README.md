@@ -22,7 +22,6 @@ CI CD:
   - Also see `/target` for reports & logs(or look for `Artifacts` after CI job completes)
 
 ## Install
-
 ### Mac Arm / Mac Intel / Linux / Ubuntu / VPS / CI CD Workflow
 ```shell
 curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install.sh | bash
@@ -52,6 +51,11 @@ _(This is a GitHub Actions step. A similar step can go into a GitLab CI/CD Pipel
 ```
 
 </details>
+
+### Windows OS
+```shell
+coming soon...
+```
 
 ### Alternatively For Mac M1-M5 (Java pre-bundled)
 No Java required — JRE is included in the distribution.
