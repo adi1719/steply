@@ -6,6 +6,13 @@ Steply is a CLI tool to validate APIs, databases, Kafka messages, and more.
 - Automate BDD-style tests or run manual validations using simple JSON or YAML — no coding required.
 - Store tests in Git and easily manage manual tests, regression suites, and integration tests.
 
+## AI Prompt (example)
+### Generated Scenarios for `Claude Code` or CoPilot or similar:
+> Write a Zerocode scenario that conforms to `schema/zerocode-scenario-schema.json` for `<your API testing idea>`.
+> Use the `assertions` block (not `verify`) and include retry of 3 attempts with 500ms delay.
+
+Two starter templates live under [`templates/`](templates/): `example_scenario_1.json` (typical REST flow with two steps), and `example_scenario_2.json` (parameterized scenario with both `valueSource` and `csvSource`).
+
 See [examples](https://github.com/QABEES/steply-examples).
 
 ## Quick Start
@@ -175,6 +182,18 @@ While the above tools are powerful, they are often heavy, proprietary, or tightl
 This project :
 - focuses on providing a open-source and collaborative developer/SDET experience
 - provides easy/pluggable integrations (Kafka, S3, Postgres, and more)
+
+## JSON Schema for Test Scenario
+A JSON Schema (Draft-07) for scenario files is published at [`schema/zerocode-scenario-schema.json`](schema/zerocode-scenario-schema.json) and
+pointed to from `robots.txt` at the project root. Use it to:
+
+- **Validate scenarios from the CLI**, e.g. with `ajv-cli`:
+
+  ```bash
+  # Note: This is optional step, only do this if you have npx and ajv-cli already installed
+  # npx: Runs npm package without global install
+  npx ajv-cli validate -s schema/zerocode-scenario-schema.json -d core/src/test/resources/templates/example_scenario_1.json
+  ```
 
 ## Credits
 Special thanks to all the authors and contributors of the zerocode-tdd JSON/YAML testing framework.
