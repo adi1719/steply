@@ -60,14 +60,44 @@ _(This is a GitHub Actions step. A similar step can go into a GitLab CI/CD Pipel
 </details>
 
 ### Windows OS
-```shell
-coming soon...
+Follow the steps below
+
+### Manual Install (Windows, Unix & Mac)
+
+**Step 1 — Download the zip**
+Go to the [Steply Releases](https://github.com/QABEES/steply/releases) page and download the `no-jre` zip for your target release, e.g.:
+```
+steply-20260425.01-no-jre.zip
 ```
 
-### Alternatively For Mac M1-M5 (Java pre-bundled)
-No Java required — JRE is included in the distribution.
+**Step 2 — Unzip**
 ```shell
-curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install_mac_arm.sh | bash
+unzip steply-20260425.01-no-jre.zip -d ~/steply
+```
+
+**Step 3 — Ensure Java 17+ is available**
+Check that `JAVA_HOME` points to a Java 17+ installation:
+```shell
+java -version          # must be 17 or higher
+echo $JAVA_HOME        # should not be empty
+```
+If `JAVA_HOME` is not set, set it in your shell profile (e.g. `~/.zshrc` or `~/.bashrc`):
+```shell
+export JAVA_HOME=/path/to/your/java17
+```
+
+**Step 4 — Add Steply to PATH**
+```shell
+export PATH="$HOME/steply/bin:$PATH"
+```
+Add the same line to your shell profile so it persists across sessions, then reload:
+```shell
+source ~/.zshrc   # or source ~/.bashrc
+```
+
+**Step 5 — Verify**
+```shell
+steply --version
 ```
 
 ## Run a test
