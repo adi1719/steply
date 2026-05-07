@@ -60,9 +60,48 @@ _(This is a GitHub Actions step. A similar step can go into a GitLab CI/CD Pipel
 </details>
 
 ### Windows OS
-Follow the steps below
+Follow the **Manual Install (Windows OS)** steps below.
 
-### Manual Install (Windows, Unix & Mac)
+### Manual Install (Windows OS)
+
+**Step 1 — Download the zip**
+Go to the [Steply Releases](https://github.com/QABEES/steply/releases) page and download the `no-jre` zip for your target release, e.g.:
+```
+steply-20260425.01-no-jre.zip
+```
+
+**Step 2 — Unzip**
+Open PowerShell and run:
+```powershell
+Expand-Archive -Path "$env:USERPROFILE\Downloads\steply-20260425.01-no-jre.zip" -DestinationPath "$env:USERPROFILE\steply"
+```
+
+**Step 3 — Ensure Java 17+ is available**
+Check your Java version in PowerShell:
+```powershell
+java -version
+```
+Must be 17 or higher. If not installed, download from [adoptium.net](https://adoptium.net) and install.
+
+Then set `JAVA_HOME` permanently (run once in PowerShell as Administrator):
+```powershell
+[System.Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Program Files\Java\jdk-17", "Machine")
+```
+
+**Step 4 — Add Steply to PATH**
+Set `PATH` permanently (run once in PowerShell as Administrator):
+```powershell
+$current = [System.Environment]::GetEnvironmentVariable("PATH", "Machine")
+[System.Environment]::SetEnvironmentVariable("PATH", "$env:USERPROFILE\steply\bin;$current", "Machine")
+```
+Close and reopen PowerShell for the changes to take effect.
+
+**Step 5 — Verify**
+```powershell
+steply --version
+```
+
+### Manual Install (Mac / Linux / Unix)
 
 **Step 1 — Download the zip**
 Go to the [Steply Releases](https://github.com/QABEES/steply/releases) page and download the `no-jre` zip for your target release, e.g.:
