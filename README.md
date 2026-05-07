@@ -6,27 +6,26 @@ Steply is a CLI tool to validate APIs, databases, Kafka messages, and more.
 - Automate BDD-style tests or run manual validations using simple JSON or YAML — no coding required.
 - Store tests in Git and easily manage manual tests, regression suites, and integration tests.
 
+See [examples](https://github.com/QABEES/steply-examples).
+
 ## AI Prompt (example)
-### Generated Scenarios for `Claude Code` or CoPilot or similar:
+### Auto Generate Scenarios by `Claude Code` or CoPilot or Others:
 > Write a Zerocode scenario that conforms to `schema/zerocode-scenario-schema.json` for `<your API testing idea>`.
 > Use the `assertions` block (not `verify`) and include retry of 3 attempts with 500ms delay.
 
-Two starter templates live under [`templates/`](templates/): `example_scenario_1.json` (typical REST flow with two steps), and `example_scenario_2.json` (parameterized scenario with both `valueSource` and `csvSource`).
-
-See [examples](https://github.com/QABEES/steply-examples).
 
 ## Quick Start
 Laptop or PC:
-- Step-1: Install Steply (In your laptop or PC)
-- Step-2: Clone the [examples](https://github.com/QABEES/steply-examples) repo and then do `cd steply-examples`
+- Step-1: Install Steply (In your laptop or PC) from "Install" section below.
+- Step-2: Clone the [examples](https://github.com/QABEES/steply-examples) repo and then do `cd steply-examples`.
 - Step-3: Run a test or test suite using the **run** command and verify the **PASS/FAIL** result at the concole.
-  - Also see `/target` for reports & logs
+  - Also see `/target` for reports & logs.
 
 CI CD:
 - Step-1: Push your test scenarios and envs to your Git repo. Ignore the `/target` (results) folder in `.gitignore`.
 - Step-2: Configure the CI workflow (see the **Install** section below).
-- Step-3: Trigger the workflow and check the Job console for **PASS/FAIL** status at the console
-  - Also see `/target` for reports & logs(or look for `Artifacts` after CI job completes)
+- Step-3: Trigger the workflow and check the Job console for **PASS/FAIL** status at the console.
+  - Also see `/target` for reports & logs(or look for `Artifacts` after CI job completes).
 
 ## Install
 ### Mac Arm / Mac Intel / Linux / Ubuntu / VPS / CI CD Workflow
@@ -58,6 +57,8 @@ _(This is a GitHub Actions step. A similar step can go into a GitLab CI/CD Pipel
 ```
 
 </details>
+
+---
 
 ### Windows OS
 Follow the **Manual Install (Windows OS)** steps below.
@@ -101,6 +102,8 @@ Close and reopen PowerShell for the changes to take effect.
 steply --version
 ```
 
+---
+
 ### Manual Install (Mac / Linux / Unix)
 
 **Step 1 — Download the zip**
@@ -138,6 +141,8 @@ source ~/.zshrc   # or source ~/.bashrc
 ```shell
 steply --version
 ```
+
+---
 
 ## Run a test
 ```shell
