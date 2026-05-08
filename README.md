@@ -6,27 +6,26 @@ Steply is a CLI tool to validate APIs, databases, Kafka messages, and more.
 - Automate BDD-style tests or run manual validations using simple JSON or YAML — no coding required.
 - Store tests in Git and easily manage manual tests, regression suites, and integration tests.
 
+See [examples](https://github.com/QABEES/steply-examples).
+
 ## AI Prompt (example)
-### Generated Scenarios for `Claude Code` or CoPilot or similar:
+### Auto Generate Scenarios by `Claude Code` or CoPilot or Others:
 > Write a Zerocode scenario that conforms to `schema/zerocode-scenario-schema.json` for `<your API testing idea>`.
 > Use the `assertions` block (not `verify`) and include retry of 3 attempts with 500ms delay.
 
-Two starter templates live under [`templates/`](templates/): `example_scenario_1.json` (typical REST flow with two steps), and `example_scenario_2.json` (parameterized scenario with both `valueSource` and `csvSource`).
-
-See [examples](https://github.com/QABEES/steply-examples).
 
 ## Quick Start
 Laptop or PC:
-- Step-1: Install Steply (In your laptop or PC)
-- Step-2: Clone the [examples](https://github.com/QABEES/steply-examples) repo and then do `cd steply-examples`
+- Step-1: Install Steply (In your laptop or PC) from "Install" section below.
+- Step-2: Clone the [examples](https://github.com/QABEES/steply-examples) repo and then do `cd steply-examples`.
 - Step-3: Run a test or test suite using the **run** command and verify the **PASS/FAIL** result at the concole.
-  - Also see `/target` for reports & logs
+  - Also see `/target` for reports & logs.
 
 CI CD:
 - Step-1: Push your test scenarios and envs to your Git repo. Ignore the `/target` (results) folder in `.gitignore`.
 - Step-2: Configure the CI workflow (see the **Install** section below).
-- Step-3: Trigger the workflow and check the Job console for **PASS/FAIL** status at the console
-  - Also see `/target` for reports & logs(or look for `Artifacts` after CI job completes)
+- Step-3: Trigger the workflow and check the Job console for **PASS/FAIL** status at the console.
+  - Also see `/target` for reports & logs(or look for `Artifacts` after CI job completes).
 
 ## Install
 ### Mac Arm / Mac Intel / Linux / Ubuntu / VPS / CI CD Workflow
@@ -59,16 +58,91 @@ _(This is a GitHub Actions step. A similar step can go into a GitLab CI/CD Pipel
 
 </details>
 
+---
+
 ### Windows OS
-```shell
-coming soon...
+Follow the **Manual Install (Windows OS)** steps below.
+
+### Manual Install (Windows OS)
+
+**Step 1 — Download the zip**
+Go to the [Steply Releases](https://github.com/QABEES/steply/releases) page and download the `no-jre` zip for your target release, e.g.:
+```
+steply-20260425.01-no-jre.zip
 ```
 
-### Alternatively For Mac M1-M5 (Java pre-bundled)
-No Java required — JRE is included in the distribution.
-```shell
-curl -fsSL https://raw.githubusercontent.com/QABEES/steply/main/scripts/install_mac_arm.sh | bash
+**Step 2 — Unzip**
+Open PowerShell and run:
+```powershell
+Expand-Archive -Path "$env:USERPROFILE\Downloads\steply-20260425.01-no-jre.zip" -DestinationPath "$env:USERPROFILE\steply"
 ```
+
+**Step 3 — Ensure Java 17+ is available**
+Check your Java version in PowerShell:
+```powershell
+java -version
+```
+Must be 17 or higher. If not installed, download from [adoptium.net](https://adoptium.net) and install.
+
+Then set `JAVA_HOME` permanently (run once in PowerShell as Administrator):
+```powershell
+[System.Environment]::SetEnvironmentVariable("JAVA_HOME", "C:\Program Files\Java\jdk-17", "Machine")
+```
+
+**Step 4 — Add Steply to PATH**
+Set `PATH` permanently (run once in PowerShell as Administrator):
+```powershell
+$current = [System.Environment]::GetEnvironmentVariable("PATH", "Machine")
+[System.Environment]::SetEnvironmentVariable("PATH", "$env:USERPROFILE\steply\bin;$current", "Machine")
+```
+Close and reopen PowerShell for the changes to take effect.
+
+**Step 5 — Verify**
+```powershell
+steply --version
+```
+
+---
+
+### Manual Install (Mac / Linux / Unix)
+
+**Step 1 — Download the zip**
+Go to the [Steply Releases](https://github.com/QABEES/steply/releases) page and download the `no-jre` zip for your target release, e.g.:
+```
+steply-20260425.01-no-jre.zip
+```
+
+**Step 2 — Unzip**
+```shell
+unzip steply-20260425.01-no-jre.zip -d ~/steply
+```
+
+**Step 3 — Ensure Java 17+ is available**
+Check that `JAVA_HOME` points to a Java 17+ installation:
+```shell
+java -version          # must be 17 or higher
+echo $JAVA_HOME        # should not be empty
+```
+If `JAVA_HOME` is not set, set it in your shell profile (e.g. `~/.zshrc` or `~/.bashrc`):
+```shell
+export JAVA_HOME=/path/to/your/java17
+```
+
+**Step 4 — Add Steply to PATH**
+```shell
+export PATH="$HOME/steply/bin:$PATH"
+```
+Add the same line to your shell profile so it persists across sessions, then reload:
+```shell
+source ~/.zshrc   # or source ~/.bashrc
+```
+
+**Step 5 — Verify**
+```shell
+steply --version
+```
+
+---
 
 ## Run a test
 ```shell
