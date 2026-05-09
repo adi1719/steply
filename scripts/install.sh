@@ -8,7 +8,7 @@
 
 set -euo pipefail
 
-VERSION="20260425.01" #This is the only variable to update when releasing a new version.
+VERSION="20260509.01" #This is the only variable to update when releasing a new version.
 ZIP_NAME="steply-${VERSION}-no-jre.zip"
 ZIP_URL="https://github.com/QABEES/steply/releases/download/${VERSION}/${ZIP_NAME}"
 
