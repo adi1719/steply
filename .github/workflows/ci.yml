@@ -141,7 +141,7 @@ jobs:
   # (At tag-push time the PR to update install.sh has not been merged yet.)
   # ---------------------------------------------------------------------------
   integration-test-install:
-    name: Integration-test install.sh (Ubuntu, tag version)
+    name: Integration-test install.sh (Ubuntu, pre-merge tag build)
     needs: build
     if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -173,7 +173,7 @@ jobs:
   # Triggered only when the release-update commit lands on main.
   # ---------------------------------------------------------------------------
   integration-test-curl:
-    name: Integration-test install.sh via curl (post-merge)
+    name: Integration-test install.sh via curl (ubuntu, post-merge main build)
     if: |
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
